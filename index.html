@@ -63,7 +63,6 @@
       const loading = document.getElementById('loading');
       const container = document.getElementById('data-container');
 
-      // 顯示加載提示
       loading.style.display = 'block';
       container.innerHTML = '';
 
@@ -80,17 +79,12 @@
         const data = await response.json();
         loading.style.display = 'none';
 
-        // 顯示數據
-        if (data.records && data.records.length > 0) {
+        if (data && data.fields) {
           let html = '<h2>提取的數據：</h2><ul>';
-          data.records.forEach(record => {
-            // 假設 Airtable 表有 Name 和 Email 欄位，根據實際欄位調整
-            const fields = record.fields;
-            html += `<li>
-              <strong>名稱</strong>: ${fields.Name || '無'}<br>
-              <strong>電子郵件</strong>: ${fields.Email || '無'}
-            </li>`;
-          });
+          html += `<li>
+            <strong>名稱</strong>: ${data.fields.Name || '無'}<br>
+            <strong>電子郵件</strong>: ${data.fields.Email || '無'}
+          </li>`;
           html += '</ul>';
           container.innerHTML = html;
         } else {
