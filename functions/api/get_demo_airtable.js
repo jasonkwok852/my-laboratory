@@ -1,10 +1,9 @@
 export async function onRequest(context) {
-  // 從環境變數獲取 Airtable 配置（使用小寫名稱）
+  // 從環境變數獲取 Airtable 配置
   const airtable_api_key = context.env.airtable_api_key;
   const airtable_base_id = context.env.airtable_base_id;
-  // 從查詢參數獲取表名，默認為環境變數中的表名
-  const tableName = context.request.url.searchParams.get('table') || context.env.airtable_table_name;
-  const offset = context.request.url.searchParams.get('offset') || '';
+  const tableName = context.env.airtable_table_name || 'Demo 資訊數據庫';
+  const recordId = 'recPckS1p6mIyR3Hc'; // 根據你的示例指定記錄 ID
 
   // 驗證必要參數
   if (!airtable_api_key || !airtable_base_id || !tableName) {
@@ -14,8 +13,8 @@ export async function onRequest(context) {
     );
   }
 
-  // 構建 Airtable API URL
-  const url = `https://api.airtable.com/v0/${airtable_base_id}/${encodeURIComponent(tableName)}?offset=${offset}`;
+  // 構建 Airtable API URL 來獲取特定記錄
+  const url = `https://api.airtable.com/v0/${airtable_base_id}/${encodeURIComponent(tableName)}/${recordId}`;
 
   try {
     const response = await fetch(url, {
