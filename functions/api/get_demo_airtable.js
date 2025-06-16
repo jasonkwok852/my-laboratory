@@ -1,13 +1,13 @@
 export async function onRequest(context) {
-  // 從環境變數獲取 Airtable 配置
-  const AIRTABLE_API_KEY = context.env.AIRTABLE_API_KEY;
-  const AIRTABLE_BASE_ID = context.env.AIRTABLE_BASE_ID;
+  // 從環境變數獲取 Airtable 配置（使用小寫名稱）
+  const airtable_api_key = context.env.airtable_api_key;
+  const airtable_base_id = context.env.airtable_base_id;
   // 從查詢參數獲取表名，默認為環境變數中的表名
-  const tableName = context.request.url.searchParams.get('table') || context.env.AIRTABLE_TABLE_NAME;
+  const tableName = context.request.url.searchParams.get('table') || context.env.airtable_table_name;
   const offset = context.request.url.searchParams.get('offset') || '';
 
   // 驗證必要參數
-  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !tableName) {
+  if (!airtable_api_key || !airtable_base_id || !tableName) {
     return new Response(
       JSON.stringify({ error: 'Missing required environment variables or table name' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -15,12 +15,12 @@ export async function onRequest(context) {
   }
 
   // 構建 Airtable API URL
-  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}?offset=${offset}`;
+  const url = `https://api.airtable.com/v0/${airtable_base_id}/${encodeURIComponent(tableName)}?offset=${offset}`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+        Authorization: `Bearer ${airtable_api_key}`,
         'Content-Type': 'application/json',
       },
     });
