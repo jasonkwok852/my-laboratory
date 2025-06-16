@@ -1,17 +1,21 @@
 export async function onRequest(context) {
   // 從環境變數獲取 Airtable 配置
-  const {
-    AIRTABLE_API_KEY,
-    AIRTABLE_BASE_ID,
-    AIRTABLE_TABLE_NAME = 'Table 1' // 默認表名
-  } = context.env;
+  const AIRTABLE_API_KEY = context.env.AIRTABLE_API_KEY;
+  const AIRTABLE_BASE_ID = context.env.AIRTABLE_BASE_ID;
+  // 從查詢參數獲取表名，默認為環境變數中的表名
+  const tableName = context.request.url.searchParams.get('table') || context.env.AIRTABLE_TABLE_NAME;
+  const offset = context.request.url.searchParams.get('offset') || '';
 
-  // 從查詢參數獲取 offset
-  const { searchParams } = new URL(context.request.url);
-  const offset = searchParams.get('offset') || '';
+  // 驗證必要參數
+  if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !tableName) {
+    return new Response(
+      JSON.stringify({ error: 'Missing required environment variables or table name' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
   // 構建 Airtable API URL
-  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}?${offset ? `offset=${encodeURIComponent(offset)}&` : ''}view=Grid%20view`;
+  const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}?offset=${offset}`;
 
   try {
     const response = await fetch(url, {
@@ -22,33 +26,20 @@ export async function onRequest(context) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Airtable API error:', error);
-      return new Response(JSON.stringify({ error: error.message || 'Airtable API 錯誤' }), {
-        status: response.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({ error: `Airtable API error: ${response.statusText}` }),
+        { status: response.status, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
-    
-    // 可以在此處對數據進行處理或過濾
-    const processedData = {
-      records: data.records,
-      offset: data.offset || null
-    };
-
-    return new Response(JSON.stringify(processedData), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60' // 緩存 60 秒
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching from Airtable:', error);
-    return new Response(JSON.stringify({ error: error.message || '伺服器錯誤' }), {
-      status: 500,
+    return new Response(JSON.stringify(data), {
       headers: { 'Content-Type': 'application/json' },
     });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: `Server error: ${error.message}` }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
